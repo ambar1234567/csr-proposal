@@ -1,58 +1,61 @@
-import openai
-from config import Config
-import json
+import os
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Initialize the AI model (will auto-download on first run)
+model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
 
 def analyze_proposal(text):
-    """Analyze proposal text using OpenAI API"""
-    try:
-        openai.api_key = Config.OPENAI_API_KEY
-        
-        prompt = f"""
-        Analyze this CSR project proposal based on the following quality parameters:
-        1. Language (Grammar, writing style, alignment with objectives)
-        2. Literature Review (Relevant data, source reliability, timeliness of data)
-        3. Presentation (Graphical presentation, formatting)
-        4. Risk Mitigation (Identification of risks and solutions to address them)
-        5. Budget (Detailed breakdown of accurate budget)
-        
-        Provide detailed feedback for each parameter and an overall assessment.
-        The proposal text is:
-        {text[:12000]}  # Limiting to 12k tokens
-        
-        Return the response in JSON format with these keys:
-        - "language_analysis"
-        - "literature_review_analysis"
-        - "presentation_analysis"
-        - "risk_mitigation_analysis"
-        - "budget_analysis"
-        - "overall_feedback"
-        - "strengths"
-        - "weaknesses"
-        - "recommendations"
-        """
-        
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You are a CSR proposal expert analyzing project proposals for quality."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.3,
-            max_tokens=2000
-        )
-        
-        analysis = response.choices[0].message.content
-        return json.loads(analysis)
+    """
+    Analyzes CSR proposals using free HuggingFace models
+    Returns scores (0-20 per category) and feedback
+    """
     
-    except Exception as e:
-        return {
-            "error": str(e),
-            "feedback": {
-                "language_analysis": "Could not analyze due to error",
-                "literature_review_analysis": "Could not analyze due to error",
-                "presentation_analysis": "Could not analyze due to error",
-                "risk_mitigation_analysis": "Could not analyze due to error",
-                "budget_analysis": "Could not analyze due to error",
-                "overall_feedback": "Analysis failed due to technical error"
-            }
-        }
+    # Define what a good proposal should contain
+    quality_aspects = [
+        "Professional language with clear grammar and structure",
+        "Recent and reliable data sources with proper citations",
+        "Detailed risk assessment with practical mitigation plans",
+        "Comprehensive budget breakdown with justification",
+        "Strong alignment with CSR objectives and impact metrics"
+    ]
+    
+    # Convert text and aspects to numerical vectors
+    text_vector = model.encode([text])
+    aspect_vectors = model.encode(quality_aspects)
+    
+    # Calculate similarity scores (0-1)
+    similarity_scores = cosine_similarity(text_vector, aspect_vectors)[0]
+    
+    # Prepare results
+    results = {
+        "scores": {
+            "Language": round(similarity_scores[0] * 20, 1),
+            "Literature Review": round(similarity_scores[1] * 20, 1),
+            "Risk Mitigation": round(similarity_scores[2] * 20, 1),
+            "Budget": round(similarity_scores[3] * 20, 1),
+            "Objective Alignment": round(similarity_scores[4] * 20, 1)
+        },
+        "total_score": round(sum(similarity_scores) * 20, 1),  # 0-100 scale
+        "feedback": generate_feedback(quality_aspects, similarity_scores)
+    }
+    
+    return results
+
+def generate_feedback(aspects, scores):
+    """Generates simple strength/improvement feedback"""
+    feedback = {"Strengths": [], "Improvements": []}
+    
+    for i, score in enumerate(scores):
+        if score >= 0.7:  # High similarity
+            feedback["Strengths"].append(aspects[i])
+        elif score <= 0.4:  # Low similarity
+            feedback["Improvements"].append(aspects[i])
+    
+    # Default message if no strong matches
+    if not feedback["Strengths"]:
+        feedback["Strengths"].append("Clear project vision")
+    if not feedback["Improvements"]:
+        feedback["Improvements"].append("Could benefit from more detailed implementation plan")
+    
+    return feedback
