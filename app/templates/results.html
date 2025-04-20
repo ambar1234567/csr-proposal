@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Proposal Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/animate.min.css') }}">
+</head>
+<body>
+    <div class="container animate__animated animate__fadeIn">
+        <h1>Proposal Analysis Results</h1>
+        
+        <div class="score-summary">
+            <h2>Overall Score: {{ result.scores.Total }}/100</h2>
+        </div>
+
+        <div class="chart-container animate__animated animate__fadeInUp">
+            <canvas id="scoreChart" width="400" height="400"></canvas>
+        </div>
+
+        <div class="scores animate__animated animate__fadeIn">
+            <h3>Detailed Scores:</h3>
+            <ul>
+                {% for category, score in result.scores.items() if category != 'Total' %}
+                <li>{{ category }}: {{ score }}/20</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="feedback animate__animated animate__fadeIn">
+            <h3>Feedback:</h3>
+            <p>{{ result.feedback.overall_feedback }}</p>
+        </div>
+
+        <a href="/" class="button animate__animated animate__pulse">Analyze Another Proposal</a>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+</body>
+</html>

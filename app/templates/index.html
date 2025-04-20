@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSR Proposal Quality Checker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/animate.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container animate__animated animate__fadeIn">
+        <header class="header">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="CSR Logo" class="logo">
+            <h1>CSR Proposal Quality Checker</h1>
+            <p class="subtitle">AI-powered analysis for your corporate social responsibility proposals</p>
+        </header>
+
+        <main class="main-content">
+            <div class="upload-box animate__animated animate__fadeInUp">
+                <h2>Upload Your Proposal</h2>
+                <p>Get instant feedback on your CSR proposal's quality</p>
+                
+                <form method="POST" enctype="multipart/form-data" class="upload-form">
+                    <div class="file-input-container">
+                        <input type="file" name="file" id="file" class="file-input" accept=".pdf,.docx" required>
+                        <label for="file" class="file-label">
+                            <span class="file-button">Choose File</span>
+                            <span class="file-name">No file selected</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="submit-button">
+                        <span class="button-text">Analyze Proposal</span>
+                        <span class="button-loader"></span>
+                    </button>
+                </form>
+                
+                <div class="supported-formats">
+                    <p>Supported formats: PDF, DOCX</p>
+                </div>
+            </div>
+            
+            <div class="features">
+                <h3>What We Analyze:</h3>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">📝</div>
+                        <h4>Language Quality</h4>
+                        <p>Grammar, writing style, and alignment with objectives</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔍</div>
+                        <h4>Literature Review</h4>
+                        <p>Data relevance, source reliability, and timeliness</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎨</div>
+                        <h4>Presentation</h4>
+                        <p>Graphical elements and formatting quality</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⚠️</div>
+                        <h4>Risk Mitigation</h4>
+                        <p>Risk identification and solution strategies</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">💰</div>
+                        <h4>Budget Analysis</h4>
+                        <p>Detailed breakdown and accuracy</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <p>© 2023 CSR Proposal Quality Checker | Developed by Your Agency</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
