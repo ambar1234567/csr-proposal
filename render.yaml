@@ -2,33 +2,73 @@ services:
   - type: web
     name: csr-proposal-checker
     runtime: python
-    pythonVersion: "3.9.7"  # Most stable version
+    pythonVersion: "3.9.7"
     
-    # Build commands (updated with critical fixes)
+    # ======================
+    # BUILD COMMAND (Updated)
+    # ======================
     buildCommand: |
-      python -m pip install --upgrade pip
+      python -m pip install --upgrade pip setuptools wheel
       pip install -r requirements.txt --no-cache-dir
-      python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('paraphrase-MiniLM-L6-v2')" || echo "Model download completed"
-      
-    # Startup (optimized for free tier)
-    startCommand: "gunicorn run:app --timeout 120 --workers 1 --preload"
+      python -c """
+      try:
+          from sentence_transformers import SentenceTransformer
+          SentenceTransformer('paraphrase-MiniLM-L6-v2', cache_folder='/var/data/models')
+          print('Model downloaded successfully')
+      except Exception as e:
+          print(f'Model download warning: {str(e)}')
+      """
     
-    # Environment variables (updated)
+    # =======================
+    # START COMMAND (Optimized)
+    # =======================
+    startCommand: |
+      gunicorn run:app \
+        --workers 1 \
+        --timeout 120 \
+        --preload \
+        --bind 0.0.0.0:$PORT \
+        --access-logfile - \
+        --error-logfile -
+    
+    # =======================
+    # ENVIRONMENT VARIABLES (Complete)
+    # =======================
     envVars:
+      # System
+      - key: PORT
+        value: "10000"  # Render's default port
+      
+      # File Handling
       - key: UPLOAD_FOLDER
         value: "/var/data/uploads"  # Persistent storage
+      
+      # Python
       - key: PYTHON_VERSION
         value: "3.9.7"
+      - key: PYTHONUNBUFFERED
+        value: "1"
       - key: GREENLET_FORCE_CORE
-        value: "1"  # For Python 3.11+ compatibility
+        value: "1"
+      
+      # HuggingFace
+      - key: HF_HUB_DISABLE_TELEMETRY
+        value: "1"
+      - key: TRANSFORMERS_CACHE
+        value: "/var/data/models"
+      - key: HF_DATASETS_CACHE
+        value: "/var/data/datasets"
+      
+      # Flask
       - key: FLASK_APP
         value: "run.py"
-      - key: HF_HUB_DISABLE_TELEMETRY
-        value: "1"  # Disables HuggingFace analytics
-      - key: WORKER_TIMEOUT
-        value: "120"  # Matches Gunicorn timeout
+      - key: FLASK_ENV
+        value: "production"
     
-    # Advanced
+    # =======================
+    # ADVANCED
+    # =======================
     plan: free
     autoDeploy: true
-    healthCheckPath: /  # Added health check endpoint
+    healthCheckPath: /health
+    healthCheckTimeout: 30
