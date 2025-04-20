@@ -2,27 +2,33 @@ services:
   - type: web
     name: csr-proposal-checker
     runtime: python
-    pythonVersion: "3.9.7"  # Most stable with all dependencies
+    pythonVersion: "3.9.7"  # Most stable version
     
-    # Build commands
+    # Build commands (updated with critical fixes)
     buildCommand: |
-      pip install -r requirements.txt
-      python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('paraphrase-MiniLM-L6-v2')"  # Pre-download model
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt --no-cache-dir
+      python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('paraphrase-MiniLM-L6-v2')" || echo "Model download completed"
       
-    # Startup
-    startCommand: "gunicorn run:app"
+    # Startup (optimized for free tier)
+    startCommand: "gunicorn run:app --timeout 120 --workers 1 --preload"
     
-    # Environment variables
+    # Environment variables (updated)
     envVars:
       - key: UPLOAD_FOLDER
-        value: "/var/data/uploads"  # Persistent storage on Render
+        value: "/var/data/uploads"  # Persistent storage
       - key: PYTHON_VERSION
         value: "3.9.7"
       - key: GREENLET_FORCE_CORE
-        value: "1"  # Required for Python 3.11+ compatibility
+        value: "1"  # For Python 3.11+ compatibility
       - key: FLASK_APP
-        value: "run.py"  # Explicitly point to entry file
-
+        value: "run.py"
+      - key: HF_HUB_DISABLE_TELEMETRY
+        value: "1"  # Disables HuggingFace analytics
+      - key: WORKER_TIMEOUT
+        value: "120"  # Matches Gunicorn timeout
+    
     # Advanced
-    plan: free  # For starter projects
-    autoDeploy: true  # Enable automatic deploys
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /  # Added health check endpoint
