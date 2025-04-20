@@ -3,7 +3,20 @@ services:
     name: csr-proposal-checker
     runtime: python
     pythonVersion: "3.9.7"
+    
+    # Build commands
     buildCommand: |
       pip install -r requirements.txt
       python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('paraphrase-MiniLM-L6-v2')"
+    
+    # Startup command
     startCommand: "gunicorn run:app"
+    
+    # Environment variables
+    envVars:
+      - key: UPLOAD_FOLDER
+        value: "/var/data/uploads"  # Persistent storage path on Render
+      - key: PYTHON_VERSION
+        value: "3.9.7"
+      - key: GREENLET_FORCE_CORE
+        value: "1"
