@@ -1,7 +1,13 @@
 from flask import Flask
 
-# Create the Flask application instance
-app = Flask(__name__)
+def create_app():
+    app = Flask(__name__)
+    
+    # Import routes AFTER app creation
+    from app import routes
+    routes.init_app(app)
+    
+    return app
 
-# Import routes AFTER app creation to avoid circular imports
-from app.routes import *
+# Create app instance
+app = create_app()
