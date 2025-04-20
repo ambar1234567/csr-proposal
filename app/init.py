@@ -1,7 +1,7 @@
 from flask import Flask
-from config import Config
 
+# Create the Flask app instance
 app = Flask(__name__)
-app.config.from_object(Config)
 
-from app import routes
+# Import routes AFTER creating app to avoid circular imports
+from app import routes  # This must come last
